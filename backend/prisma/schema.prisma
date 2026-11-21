@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ১. ইউজার মডেল (Auth & Profile)
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      String     @default("USER")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  playlists Playlist[]
+  sessions  Session[]
+
+  @@map("users")
+}
+
+// ২. প্লেলিস্ট মডেল (Learning Playlists)
+model Playlist {
+  id                String    @id @default(uuid())
+  title             String
+  description       String?
+  totalFocusMinutes Int       @default(0) @map("total_focus_minutes")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  userId            String    @map("user_id")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  videos            Video[]
+  sessions          Session[]
+
+  @@map("playlists")
+}
+
+// ৩. ভিডিও মডেল (Playlist Items)
+model Video {
+  id         String   @id // Video/YouTube ID
+  title      String
+  kind       String?  @default("youtube#video")
+  subtitle   String?
+  thumbnail  String?
+  duration   String?
+
+  playlistId String   @map("playlist_id")
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@map("videos")
+}
+
+// ৪. স্টাডি সেশন মডেল (Session Management)
+model Session {
+  id                String    @id @default(uuid())
+  startTime         DateTime  @default(now()) @map("start_time")
+  endTime           DateTime? @map("end_time")
+  duration          Int       // Duration in minutes/seconds
+  completedDuration Int       @default(0) @map("completed_duration")
+  cycles            Int       @default(1)
+  status            String    @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  userId            String    @map("user_id")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  playlistId        String?   @map("playlist_id")
+  playlist          Playlist? @relation(fields: [playlistId], references: [id], onDelete: SetNull)
+
+  videoId           String?   @map("video_id")
+
+  attentionScores   AttentionScore[]
+
+  @@map("sessions")
+}
+
+// ৫. অ্যাটেনশন স্কোর মডেল (Real-time Focus Tracking)
+model AttentionScore {
+  id        String   @id @default(uuid())
+  score     Int      // Attention Score between 0 and 100
+  createdAt DateTime @default(now()) @map("created_at")
+
+  sessionId String   @map("session_id")
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("attention_scores")
+}
