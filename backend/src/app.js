@@ -1,6 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 
+// Routes Import
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+
 const app = express();
 
 // Middlewares
@@ -12,6 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'UP', message: 'CogneLearn API Server is running' });
 });
+
+// API Routes Mounting
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
