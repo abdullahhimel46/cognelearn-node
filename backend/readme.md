@@ -50,6 +50,7 @@ A high-performance REST API backend built with **Node.js**, **Express**, **Prism
 ### Development Mode (with automatic reload via nodemon):
 ```bash
 npm run dev
+npm run dev -- --hot-reload
 ```
 
 ### Production Mode:
