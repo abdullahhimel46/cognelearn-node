@@ -1,0 +1,15 @@
+# Dependencies (কখনোই কমিট হবে না)
+node_modules/
+
+# Environment Secrets (ডেটাবেজ পাসওয়ার্ড ও সিক্রেট কী)
+.env
+.env.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
