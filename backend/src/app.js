@@ -12,6 +12,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+// 🌟 Swagger UI Documentation Endpoint
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 // Health Check Route
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'UP', message: 'CogneLearn API Server is running' });
