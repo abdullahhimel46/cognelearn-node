@@ -442,6 +442,175 @@
                 }
             }
         },
+        "/api/v1/sessions/start": {
+            "post": {
+                "tags": ["Session Controller"],
+                "summary": "Start a new study session",
+                "security": [{ "bearerAuth": [] }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/SessionStartRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Session started",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
+                            }
+                        }
+                    },
+                    "409": { "description": "An active session already exists" }
+                }
+            }
+        },
+        "/api/v1/sessions/active": {
+            "get": {
+                "tags": ["Session Controller"],
+                "summary": "Get current active or paused session",
+                "security": [{ "bearerAuth": [] }],
+                "responses": {
+                    "200": {
+                        "description": "Active session or null",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sessions": {
+            "get": {
+                "tags": ["Session Controller"],
+                "summary": "Get session history (paginated)",
+                "security": [{ "bearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "example": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "example": 10 }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of sessions",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SessionHistoryResponse" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sessions/{id}/pause": {
+            "patch": {
+                "tags": ["Session Controller"],
+                "summary": "Pause an active session",
+                "security": [{ "bearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "format": "uuid" }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/SessionProgressRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session paused",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Session is not active" },
+                    "404": { "description": "Session not found" }
+                }
+            }
+        },
+        "/api/v1/sessions/{id}/resume": {
+            "patch": {
+                "tags": ["Session Controller"],
+                "summary": "Resume a paused session",
+                "security": [{ "bearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "format": "uuid" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session resumed",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Session is not paused" },
+                    "404": { "description": "Session not found" }
+                }
+            }
+        },
+        "/api/v1/sessions/{id}/complete": {
+            "post": {
+                "tags": ["Session Controller"],
+                "summary": "Complete a session and update playlist focus time",
+                "security": [{ "bearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "format": "uuid" }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/SessionProgressRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session completed and focus time updated",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SessionCompleteResponse" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Session is already completed" },
+                    "404": { "description": "Session not found" }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "tags": [
@@ -723,6 +892,107 @@
                     "message": {
                         "type": "string",
                         "example": "Playlist deleted successfully."
+                    }
+                }
+            },
+            "SessionStartRequest": {
+                "type": "object",
+                "required": ["duration"],
+                "properties": {
+                    "duration": {
+                        "type": "integer",
+                        "description": "Target session duration in seconds",
+                        "example": 1500
+                    },
+                    "cycles": {
+                        "type": "integer",
+                        "description": "Number of Pomodoro cycles",
+                        "example": 4
+                    },
+                    "playlistId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "description": "Optional playlist to link this session to",
+                        "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    },
+                    "videoId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Optional current YouTube video ID",
+                        "example": "dQw4w9WgXcQ"
+                    }
+                }
+            },
+            "SessionProgressRequest": {
+                "type": "object",
+                "properties": {
+                    "completedDuration": {
+                        "type": "integer",
+                        "description": "How many seconds were actually completed so far",
+                        "example": 900
+                    }
+                }
+            },
+            "SessionResponse": {
+                "type": "object",
+                "properties": {
+                    "sessionId": { "type": "string", "format": "uuid" },
+                    "status": {
+                        "type": "string",
+                        "enum": ["ACTIVE", "PAUSED", "COMPLETED"],
+                        "example": "ACTIVE"
+                    },
+                    "duration": { "type": "integer", "example": 1500 },
+                    "completedDuration": { "type": "integer", "example": 0 },
+                    "cycles": { "type": "integer", "example": 4 },
+                    "startTime": { "type": "string", "format": "date-time" },
+                    "videoId": { "type": "string", "nullable": true },
+                    "playlist": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "id": { "type": "string", "format": "uuid" },
+                            "title": { "type": "string", "example": "JavaScript Mastery" }
+                        }
+                    }
+                }
+            },
+            "SessionCompleteResponse": {
+                "type": "object",
+                "properties": {
+                    "sessionId": { "type": "string", "format": "uuid" },
+                    "status": { "type": "string", "example": "COMPLETED" },
+                    "duration": { "type": "integer", "example": 1500 },
+                    "completedDuration": { "type": "integer", "example": 1500 },
+                    "cycles": { "type": "integer", "example": 4 },
+                    "startTime": { "type": "string", "format": "date-time" },
+                    "endTime": { "type": "string", "format": "date-time" },
+                    "playlistId": { "type": "string", "format": "uuid", "nullable": true },
+                    "message": { "type": "string", "example": "Session completed successfully." }
+                }
+            },
+            "SessionHistoryResponse": {
+                "type": "object",
+                "properties": {
+                    "page": { "type": "integer", "example": 1 },
+                    "limit": { "type": "integer", "example": 10 },
+                    "total": { "type": "integer", "example": 25 },
+                    "totalPages": { "type": "integer", "example": 3 },
+                    "sessions": {
+                        "type": "array",
+                        "items": {
+                            "allOf": [
+                                { "$ref": "#/components/schemas/SessionResponse" },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "endTime": { "type": "string", "format": "date-time", "nullable": true },
+                                        "avgAttentionScore": { "type": "integer", "nullable": true, "example": 78 }
+                                    }
+                                }
+                            ]
+                        }
                     }
                 }
             }
