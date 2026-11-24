@@ -6,6 +6,9 @@ const swaggerDocument = require('./config/swagger.json');
 // Routes Import
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const playlistRoutes = require('./routes/playlist.routes');
+const authMiddleware = require('./middlewares/auth.middleware');
+const playlistController = require('./controllers/playlist.controller');
 
 const app = express();
 
@@ -13,6 +16,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/api/v1/playlists', playlistRoutes);
+app.use('/api/playlist', authMiddleware, playlistController.getPlaylistForPlayer);
 
 
 // 🌟 Swagger UI Documentation Endpoint
