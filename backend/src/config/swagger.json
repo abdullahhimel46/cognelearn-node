@@ -135,7 +135,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of playlists"
+                        "description": "List of playlists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PlaylistResponse"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -161,7 +171,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Playlist created"
+                        "description": "Playlist created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlaylistResponse"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -190,7 +207,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Playlist details"
+                        "description": "Playlist details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlaylistResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist not found"
                     }
                 }
             },
@@ -227,7 +254,17 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Playlist updated"
+                        "description": "Playlist updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlaylistResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist not found"
                     }
                 }
             },
@@ -254,7 +291,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Playlist deleted"
+                        "description": "Playlist deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist not found"
                     }
                 }
             }
@@ -293,7 +340,17 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Video added"
+                        "description": "Video added",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlaylistResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist not found"
                     }
                 }
             }
@@ -330,7 +387,57 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Video removed"
+                        "description": "Video removed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlaylistResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist not found"
+                    }
+                }
+            }
+        },
+        "/api/playlist": {
+            "get": {
+                "tags": [
+                    "Playlist Controller"
+                ],
+                "summary": "Get playlist formatted for video player",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Optional playlist ID. Defaults to user's most recent playlist if omitted.",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Playlist formatted for player",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlaylistPlayerResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Playlist not found"
                     }
                 }
             }
@@ -491,6 +598,131 @@
                         "items": {
                             "$ref": "#/components/schemas/VideoItemRequest"
                         }
+                    }
+                }
+            },
+            "VideoItemResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "dQw4w9WgXcQ"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Video Title"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "example": "youtube#video"
+                    },
+                    "subtitle": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "10:30"
+                    },
+                    "thumbnail": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+                    },
+                    "duration": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "10:30"
+                    }
+                }
+            },
+            "PlaylistResponse": {
+                "type": "object",
+                "properties": {
+                    "playlistId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "JavaScript Mastery"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Full JS course playlist"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "totalFocusMinutes": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "videos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VideoItemResponse"
+                        }
+                    }
+                }
+            },
+            "PlayerVideoItemResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "dQw4w9WgXcQ"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Video Title"
+                    },
+                    "youtubeId": {
+                        "type": "string",
+                        "example": "dQw4w9WgXcQ"
+                    },
+                    "thumbnail": {
+                        "type": "string",
+                        "example": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+                    },
+                    "duration": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "10:30"
+                    }
+                }
+            },
+            "PlaylistPlayerResponse": {
+                "type": "object",
+                "properties": {
+                    "playlistId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    },
+                    "playlistTitle": {
+                        "type": "string",
+                        "example": "JavaScript Mastery"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Full JS course playlist"
+                    },
+                    "videos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PlayerVideoItemResponse"
+                        }
+                    }
+                }
+            },
+            "MessageResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Playlist deleted successfully."
                     }
                 }
             }
