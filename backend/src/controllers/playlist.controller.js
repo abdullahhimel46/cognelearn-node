@@ -1,5 +1,9 @@
 const prisma = require('../config/db');
 
+// 🛡️ Constants
+const MAX_PLAYLIST_TITLE_LENGTH = 200;
+const MAX_VIDEOS_PER_PLAYLIST = 200;
+
 // ১. GET /api/v1/playlists — ইউজারের সব প্লেলিস্ট
 exports.list = async (req, res, next) => {
     try {
@@ -36,6 +40,15 @@ exports.create = async (req, res, next) => {
 
         if (!title) {
             return res.status(400).json({ error: 'Title is required.' });
+        }
+
+        // 🛡️ Length limits
+        if (title.trim().length > MAX_PLAYLIST_TITLE_LENGTH) {
+            return res.status(400).json({ error: `Title must be at most ${MAX_PLAYLIST_TITLE_LENGTH} characters.` });
+        }
+        // 🛡️ Cap initial videos
+        if (videos && videos.length > MAX_VIDEOS_PER_PLAYLIST) {
+            return res.status(400).json({ error: `Cannot add more than ${MAX_VIDEOS_PER_PLAYLIST} videos at once.` });
         }
 
         const playlist = await prisma.playlist.create({
