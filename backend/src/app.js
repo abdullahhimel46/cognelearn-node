@@ -19,9 +19,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/playlists', playlistRoutes);
 app.use('/api/playlist', authMiddleware, playlistController.getPlaylistForPlayer);
 
-
 // 🌟 Swagger UI Documentation Endpoint
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Server URL dynamically set so Swagger sends requests to the correct port
+const PORT = process.env.PORT || 8081;
+const swaggerOptions = {
+    swaggerOptions: {
+        persistAuthorization: true, // ✅ Token stays after page refresh
+    },
+};
+const swaggerDocWithServer = {
+    ...swaggerDocument,
+    servers: [
+        {
+            url: `http://localhost:${PORT}`,
+            description: 'Local Development Server',
+        },
+    ],
+};
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocWithServer, swaggerOptions));
 
 // Health Check Route
 app.get('/health', (req, res) => {
