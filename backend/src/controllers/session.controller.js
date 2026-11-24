@@ -312,3 +312,140 @@ exports.getSessionHistory = async (req, res, next) => {
         next(error);
     }
 };
+
+// 🛡️ Helper to determine focus rating text
+const getFocusRating = (avgScore) => {
+    if (avgScore === null || avgScore === undefined) return 'No Data';
+    if (avgScore >= 80) return 'Excellent Focus';
+    if (avgScore >= 65) return 'Good Focus';
+    if (avgScore >= 50) return 'Moderate Focus';
+    return 'Needs Improvement';
+};
+
+// ৭. POST /api/v1/sessions/:id/attention — মনোযোগ স্কোর লগিং (একক বা ব্যাচ)
+exports.logAttentionScore = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { score, scores } = req.body;
+
+        const session = await prisma.session.findFirst({
+            where: { id, userId: req.user.id },
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found.' });
+        }
+
+        // কেবল ACTIVE সেশনে স্কোর লগ করা যাবে
+        if (session.status !== 'ACTIVE') {
+            return res.status(400).json({
+                error: `Cannot log attention scores for a session with status: ${session.status}. Session must be ACTIVE.`,
+            });
+        }
+
+        // স্কোর প্রসেসিং (একক বা ব্যাচ)
+        let scoresToInsert = [];
+
+        if (Array.isArray(scores)) {
+            if (scores.length === 0) {
+                return res.status(400).json({ error: 'scores array cannot be empty.' });
+            }
+            if (scores.length > 100) {
+                return res.status(400).json({ error: 'Cannot log more than 100 scores in a single batch.' });
+            }
+            for (let i = 0; i < scores.length; i++) {
+                const s = parseInt(scores[i]);
+                if (isNaN(s) || s < 0 || s > 100) {
+                    return res.status(400).json({ error: `Each score must be an integer between 0 and 100. Invalid at index ${i}.` });
+                }
+                scoresToInsert.push({ sessionId: id, score: s });
+            }
+        } else if (score !== undefined) {
+            const s = parseInt(score);
+            if (isNaN(s) || s < 0 || s > 100) {
+                return res.status(400).json({ error: 'score must be an integer between 0 and 100.' });
+            }
+            scoresToInsert.push({ sessionId: id, score: s });
+        } else {
+            return res.status(400).json({ error: 'Either score (number) or scores (array) is required.' });
+        }
+
+        // ডেটাবেজে সেভ
+        await prisma.attentionScore.createMany({
+            data: scoresToInsert,
+        });
+
+        return res.status(201).json({
+            message: 'Attention scores logged successfully.',
+            sessionId: id,
+            loggedCount: scoresToInsert.length,
+            latestScore: scoresToInsert[scoresToInsert.length - 1].score,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ৮. GET /api/v1/sessions/:id/report — নির্দিষ্ট সেশনের বিস্তারিত অ্যানালিটিক্স রিপোর্ট
+exports.getSessionReport = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const session = await prisma.session.findFirst({
+            where: { id, userId: req.user.id },
+            include: {
+                playlist: { select: { id: true, title: true } },
+                attentionScores: {
+                    select: { score: true, createdAt: true },
+                    orderBy: { createdAt: 'asc' },
+                },
+            },
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found.' });
+        }
+
+        const scores = session.attentionScores.map((a) => a.score);
+        const hasScores = scores.length > 0;
+
+        const avgScore = hasScores
+            ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+            : null;
+        const peakScore = hasScores ? Math.max(...scores) : null;
+        const lowestScore = hasScores ? Math.min(...scores) : null;
+
+        const completionPercentage = session.duration > 0
+            ? Math.min(100, Math.round((session.completedDuration / session.duration) * 100))
+            : 0;
+
+        // টাইমলাইন ডেটা চার্টের জন্য
+        const timeline = session.attentionScores.map((a) => ({
+            timestamp: a.createdAt,
+            score: a.score,
+        }));
+
+        return res.status(200).json({
+            sessionId: session.id,
+            status: session.status,
+            playlist: session.playlist,
+            videoId: session.videoId,
+            cycles: session.cycles,
+            duration: session.duration,
+            completedDuration: session.completedDuration,
+            completionPercentage,
+            startTime: session.startTime,
+            endTime: session.endTime,
+            analytics: {
+                totalScoresLogged: scores.length,
+                avgAttentionScore: avgScore,
+                peakAttentionScore: peakScore,
+                lowestAttentionScore: lowestScore,
+                focusRating: getFocusRating(avgScore),
+                timeline,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
