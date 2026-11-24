@@ -7,6 +7,7 @@ const swaggerDocument = require('./config/swagger.json');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const playlistRoutes = require('./routes/playlist.routes');
+const sessionRoutes = require('./routes/session.routes');
 const authMiddleware = require('./middlewares/auth.middleware');
 const playlistController = require('./controllers/playlist.controller');
 
@@ -46,6 +47,7 @@ app.get('/health', (req, res) => {
 // API Routes Mounting
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/sessions', sessionRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
