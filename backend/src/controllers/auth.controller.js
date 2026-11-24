@@ -2,11 +2,18 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/db');
 
+// 🛡️ Email format validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // JWT টোকেন জেনারেট ফাংশন
 const generateToken = (user) => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not defined in environment variables.');
+    }
     return jwt.sign(
         { id: user.id, email: user.email, role: user.role },
-        process.env.JWT_SECRET || 'cognelearn_secret_key',
+        secret,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 };
@@ -16,9 +23,25 @@ exports.signup = async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
 
-        // ভ্যালিডেশন
+        // ভ্যালিডেশন — required fields
         if (!name || !email || !password) {
             return res.status(400).json({ error: 'Name, email, and password are required.' });
+        }
+
+        // 🛡️ Max length checks (DoS prevention)
+        if (name.trim().length > 100) {
+            return res.status(400).json({ error: 'Name must be at most 100 characters.' });
+        }
+        if (email.trim().length > 254) {
+            return res.status(400).json({ error: 'Email must be at most 254 characters.' });
+        }
+        if (password.length > 128) {
+            return res.status(400).json({ error: 'Password must be at most 128 characters.' });
+        }
+
+        // 🛡️ Email format validation
+        if (!EMAIL_REGEX.test(email.trim())) {
+            return res.status(400).json({ error: 'Invalid email format.' });
         }
 
         if (password.length < 6) {
