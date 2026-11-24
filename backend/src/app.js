@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./config/swagger.json');
 
@@ -13,10 +15,48 @@ const playlistController = require('./controllers/playlist.controller');
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 🛡️ Security Headers (Helmet)
+app.use(helmet());
+
+// 🌐 CORS — only allow configured origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080'];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, Postman)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// 🚦 Global rate limit — 100 requests per 15 minutes per IP
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later.' },
+});
+app.use(globalLimiter);
+
+// 🔐 Strict rate limit on auth endpoints — 10 attempts per 15 minutes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many login attempts, please try again after 15 minutes.' },
+});
+
+app.use(express.json({ limit: '10kb' }));           // 🛡️ Body size limit to prevent large payload attacks
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use('/api/v1/playlists', playlistRoutes);
 app.use('/api/playlist', authMiddleware, playlistController.getPlaylistForPlayer);
 
@@ -45,7 +85,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes Mounting
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth', authLimiter, authRoutes);  // 🔐 Strict rate limit on auth
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/sessions', sessionRoutes);
 
@@ -56,10 +96,21 @@ app.get('/', (req, res) => {
 
 // Central Error Handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    // CORS errors
+    if (err.message === 'Not allowed by CORS') {
+        return res.status(403).json({ error: 'CORS: Origin not allowed.' });
+    }
+    // Log only in development
+    if (process.env.NODE_ENV !== 'production') {
+        console.error(err.stack);
+    } else {
+        console.error(`[ERROR] ${err.message}`);
+    }
     res.status(err.status || 500).json({
         error: {
-            message: err.message || 'Internal Server Error',
+            message: process.env.NODE_ENV === 'production'
+                ? 'Internal Server Error'
+                : err.message || 'Internal Server Error',
         },
     });
 });
