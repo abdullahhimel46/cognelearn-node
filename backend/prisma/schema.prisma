@@ -41,7 +41,7 @@ model Playlist {
 
 // ৩. ভিডিও মডেল (Playlist Items)
 model Video {
-  id         String   @id // Video/YouTube ID
+  id         String   // Video/YouTube ID
   title      String
   kind       String?  @default("youtube#video")
   subtitle   String?
@@ -51,6 +51,7 @@ model Video {
   playlistId String   @map("playlist_id")
   playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 
+  @@id([id, playlistId])
   @@map("videos")
 }
 
