@@ -1,1193 +1,1686 @@
 {
-    "openapi": "3.0.1",
-    "info": {
-        "title": "CogneLearn API",
-        "description": "REST API Documentation for CogneLearn Application",
-        "version": "1.0"
-    },
-    "servers": [
-        {
-            "url": "/",
-            "description": "Current Server"
-        }
-    ],
-    "paths": {
-        "/api/v1/auth/signup": {
-            "post": {
-                "tags": [
-                    "Auth Controller"
-                ],
-                "summary": "Register a new user",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SignupRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "User created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AuthResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/login": {
-            "post": {
-                "tags": [
-                    "Auth Controller"
-                ],
-                "summary": "Authenticate user & get JWT token",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/LoginRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Login successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AuthResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/me": {
-            "get": {
-                "tags": [
-                    "Auth Controller"
-                ],
-                "summary": "Get currently logged-in user profile",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Current user profile",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/UserResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/users/me": {
-            "get": {
-                "tags": [
-                    "User Controller"
-                ],
-                "summary": "Get user profile details",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User profile",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/UserResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/users/stats": {
-            "get": {
-                "tags": [
-                    "User Controller"
-                ],
-                "summary": "Get user learning statistics and study streak",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User overall learning statistics",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/UserStatsResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/playlists": {
-            "get": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Get all playlists for logged-in user",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of playlists",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/PlaylistResponse"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Create a new playlist",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PlaylistRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Playlist created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PlaylistResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/playlists/{playlistId}": {
-            "get": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Get a playlist by ID",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Playlist details",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PlaylistResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Playlist not found"
-                    }
-                }
-            },
-            "patch": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Update a playlist",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PlaylistUpdateRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Playlist updated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PlaylistResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Playlist not found"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Delete a playlist",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Playlist deleted",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/MessageResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Playlist not found"
-                    }
-                }
-            }
-        },
-        "/api/v1/playlists/{playlistId}/videos": {
-            "post": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Add a video to a playlist",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/VideoItemRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Video added",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PlaylistResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Playlist not found"
-                    }
-                }
-            }
-        },
-        "/api/v1/playlists/{playlistId}/videos/{videoId}": {
-            "delete": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Remove a video from a playlist",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "videoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Video removed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PlaylistResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Playlist not found"
-                    }
-                }
-            }
-        },
-        "/api/playlist": {
-            "get": {
-                "tags": [
-                    "Playlist Controller"
-                ],
-                "summary": "Get playlist formatted for video player",
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "query",
-                        "required": false,
-                        "description": "Optional playlist ID. Defaults to user's most recent playlist if omitted.",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Playlist formatted for player",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PlaylistPlayerResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Playlist not found"
-                    }
-                }
-            }
-        },
-        "/api/v1/sessions/start": {
-            "post": {
-                "tags": ["Session Controller"],
-                "summary": "Start a new study session",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/SessionStartRequest" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Session started",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
-                            }
-                        }
-                    },
-                    "409": { "description": "An active session already exists" }
-                }
-            }
-        },
-        "/api/v1/sessions/active": {
-            "get": {
-                "tags": ["Session Controller"],
-                "summary": "Get current active or paused session",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": {
-                        "description": "Active session or null",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/sessions": {
-            "get": {
-                "tags": ["Session Controller"],
-                "summary": "Get session history (paginated)",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "schema": { "type": "integer", "example": 1 }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "schema": { "type": "integer", "example": 10 }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Paginated list of sessions",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionHistoryResponse" }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/sessions/{id}/pause": {
-            "patch": {
-                "tags": ["Session Controller"],
-                "summary": "Pause an active session",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string", "format": "uuid" }
-                    }
-                ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/SessionProgressRequest" }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Session paused",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
-                            }
-                        }
-                    },
-                    "400": { "description": "Session is not active" },
-                    "404": { "description": "Session not found" }
-                }
-            }
-        },
-        "/api/v1/sessions/{id}/resume": {
-            "patch": {
-                "tags": ["Session Controller"],
-                "summary": "Resume a paused session",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string", "format": "uuid" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Session resumed",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionResponse" }
-                            }
-                        }
-                    },
-                    "400": { "description": "Session is not paused" },
-                    "404": { "description": "Session not found" }
-                }
-            }
-        },
-        "/api/v1/sessions/{id}/complete": {
-            "post": {
-                "tags": ["Session Controller"],
-                "summary": "Complete a session and update playlist focus time",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string", "format": "uuid" }
-                    }
-                ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/SessionProgressRequest" }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Session completed and focus time updated",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionCompleteResponse" }
-                            }
-                        }
-                    },
-                    "400": { "description": "Session is already completed" },
-                    "404": { "description": "Session not found" }
-                }
-            }
-        },
-        "/api/v1/sessions/{id}/attention": {
-            "post": {
-                "tags": ["Session Controller"],
-                "summary": "Log single or batch attention scores (0-100) for active session",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string", "format": "uuid" }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/AttentionLogRequest" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Attention scores logged successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/AttentionLogResponse" }
-                            }
-                        }
-                    },
-                    "400": { "description": "Invalid score or session not active" },
-                    "404": { "description": "Session not found" }
-                }
-            }
-        },
-        "/api/v1/sessions/{id}/report": {
-            "get": {
-                "tags": ["Session Controller"],
-                "summary": "Get detailed session analytics report with timeline and ratings",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string", "format": "uuid" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Detailed session report",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/SessionReportResponse" }
-                            }
-                        }
-                    },
-                    "404": { "description": "Session not found" }
-                }
-            }
-        },
-        "/health": {
-            "get": {
-                "tags": [
-                    "Health Check"
-                ],
-                "summary": "Check API server health status",
-                "responses": {
-                    "200": {
-                        "description": "Server is healthy"
-                    }
-                }
-            }
-        }
-    },
-    "components": {
-        "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT"
-            }
-        },
-        "schemas": {
-            "SignupRequest": {
-                "type": "object",
-                "required": [
-                    "name",
-                    "email",
-                    "password"
-                ],
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "example": "Abdullah"
-                    },
-                    "email": {
-                        "type": "string",
-                        "example": "abdullah@example.com"
-                    },
-                    "password": {
-                        "type": "string",
-                        "example": "password123"
-                    }
-                }
-            },
-            "LoginRequest": {
-                "type": "object",
-                "required": [
-                    "email",
-                    "password"
-                ],
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "example": "abdullah@example.com"
-                    },
-                    "password": {
-                        "type": "string",
-                        "example": "password123"
-                    }
-                }
-            },
-            "UserResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "role": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                }
-            },
-            "AuthResponse": {
-                "type": "object",
-                "properties": {
-                    "user": {
-                        "$ref": "#/components/schemas/UserResponse"
-                    },
-                    "token": {
-                        "type": "string"
-                    }
-                }
-            },
-            "PlaylistRequest": {
-                "type": "object",
-                "required": [
-                    "title"
-                ],
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "example": "JavaScript Mastery"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Full JS course playlist"
-                    },
-                    "videos": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/VideoItemRequest"
-                        }
-                    }
-                }
-            },
-            "VideoItemRequest": {
-                "type": "object",
-                "required": [
-                    "id",
-                    "title"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "example": "dQw4w9WgXcQ"
-                    },
-                    "title": {
-                        "type": "string",
-                        "example": "Video Title"
-                    },
-                    "kind": {
-                        "type": "string",
-                        "example": "youtube#video"
-                    },
-                    "subtitle": {
-                        "type": "string",
-                        "example": "10:30"
-                    }
-                }
-            },
-            "PlaylistUpdateRequest": {
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "videos": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/VideoItemRequest"
-                        }
-                    }
-                }
-            },
-            "VideoItemResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "example": "dQw4w9WgXcQ"
-                    },
-                    "title": {
-                        "type": "string",
-                        "example": "Video Title"
-                    },
-                    "kind": {
-                        "type": "string",
-                        "example": "youtube#video"
-                    },
-                    "subtitle": {
-                        "type": "string",
-                        "nullable": true,
-                        "example": "10:30"
-                    },
-                    "thumbnail": {
-                        "type": "string",
-                        "nullable": true,
-                        "example": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
-                    },
-                    "duration": {
-                        "type": "string",
-                        "nullable": true,
-                        "example": "10:30"
-                    }
-                }
-            },
-            "PlaylistResponse": {
-                "type": "object",
-                "properties": {
-                    "playlistId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    },
-                    "title": {
-                        "type": "string",
-                        "example": "JavaScript Mastery"
-                    },
-                    "description": {
-                        "type": "string",
-                        "nullable": true,
-                        "example": "Full JS course playlist"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "totalFocusMinutes": {
-                        "type": "integer",
-                        "example": 0
-                    },
-                    "videos": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/VideoItemResponse"
-                        }
-                    }
-                }
-            },
-            "PlayerVideoItemResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "example": "dQw4w9WgXcQ"
-                    },
-                    "title": {
-                        "type": "string",
-                        "example": "Video Title"
-                    },
-                    "youtubeId": {
-                        "type": "string",
-                        "example": "dQw4w9WgXcQ"
-                    },
-                    "thumbnail": {
-                        "type": "string",
-                        "example": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
-                    },
-                    "duration": {
-                        "type": "string",
-                        "nullable": true,
-                        "example": "10:30"
-                    }
-                }
-            },
-            "PlaylistPlayerResponse": {
-                "type": "object",
-                "properties": {
-                    "playlistId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    },
-                    "playlistTitle": {
-                        "type": "string",
-                        "example": "JavaScript Mastery"
-                    },
-                    "description": {
-                        "type": "string",
-                        "nullable": true,
-                        "example": "Full JS course playlist"
-                    },
-                    "videos": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/PlayerVideoItemResponse"
-                        }
-                    }
-                }
-            },
-            "MessageResponse": {
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "example": "Playlist deleted successfully."
-                    }
-                }
-            },
-            "SessionStartRequest": {
-                "type": "object",
-                "required": ["duration"],
-                "properties": {
-                    "duration": {
-                        "type": "integer",
-                        "description": "Target session duration in seconds",
-                        "example": 1500
-                    },
-                    "cycles": {
-                        "type": "integer",
-                        "description": "Number of Pomodoro cycles",
-                        "example": 4
-                    },
-                    "playlistId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "nullable": true,
-                        "description": "Optional playlist to link this session to",
-                        "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    },
-                    "videoId": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "Optional current YouTube video ID",
-                        "example": "dQw4w9WgXcQ"
-                    }
-                }
-            },
-            "SessionProgressRequest": {
-                "type": "object",
-                "properties": {
-                    "completedDuration": {
-                        "type": "integer",
-                        "description": "How many seconds were actually completed so far",
-                        "example": 900
-                    }
-                }
-            },
-            "SessionResponse": {
-                "type": "object",
-                "properties": {
-                    "sessionId": { "type": "string", "format": "uuid" },
-                    "status": {
-                        "type": "string",
-                        "enum": ["ACTIVE", "PAUSED", "COMPLETED"],
-                        "example": "ACTIVE"
-                    },
-                    "duration": { "type": "integer", "example": 1500 },
-                    "completedDuration": { "type": "integer", "example": 0 },
-                    "cycles": { "type": "integer", "example": 4 },
-                    "startTime": { "type": "string", "format": "date-time" },
-                    "videoId": { "type": "string", "nullable": true },
-                    "playlist": {
-                        "type": "object",
-                        "nullable": true,
-                        "properties": {
-                            "id": { "type": "string", "format": "uuid" },
-                            "title": { "type": "string", "example": "JavaScript Mastery" }
-                        }
-                    }
-                }
-            },
-            "SessionCompleteResponse": {
-                "type": "object",
-                "properties": {
-                    "sessionId": { "type": "string", "format": "uuid" },
-                    "status": { "type": "string", "example": "COMPLETED" },
-                    "duration": { "type": "integer", "example": 1500 },
-                    "completedDuration": { "type": "integer", "example": 1500 },
-                    "cycles": { "type": "integer", "example": 4 },
-                    "startTime": { "type": "string", "format": "date-time" },
-                    "endTime": { "type": "string", "format": "date-time" },
-                    "playlistId": { "type": "string", "format": "uuid", "nullable": true },
-                    "message": { "type": "string", "example": "Session completed successfully." }
-                }
-            },
-            "SessionHistoryResponse": {
-                "type": "object",
-                "properties": {
-                    "page": { "type": "integer", "example": 1 },
-                    "limit": { "type": "integer", "example": 10 },
-                    "total": { "type": "integer", "example": 25 },
-                    "totalPages": { "type": "integer", "example": 3 },
-                    "sessions": {
-                        "type": "array",
-                        "items": {
-                            "allOf": [
-                                { "$ref": "#/components/schemas/SessionResponse" },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "endTime": { "type": "string", "format": "date-time", "nullable": true },
-                                        "avgAttentionScore": { "type": "integer", "nullable": true, "example": 78 }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "AttentionLogRequest": {
-                "type": "object",
-                "properties": {
-                    "score": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 100,
-                        "example": 85,
-                        "description": "Single attention score between 0 and 100"
-                    },
-                    "scores": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 100
-                        },
-                        "example": [75, 80, 85, 90],
-                        "description": "Batch of attention scores (max 100)"
-                    }
-                }
-            },
-            "AttentionLogResponse": {
-                "type": "object",
-                "properties": {
-                    "message": { "type": "string", "example": "Attention scores logged successfully." },
-                    "sessionId": { "type": "string", "format": "uuid" },
-                    "loggedCount": { "type": "integer", "example": 4 },
-                    "latestScore": { "type": "integer", "example": 90 }
-                }
-            },
-            "SessionReportResponse": {
-                "type": "object",
-                "properties": {
-                    "sessionId": { "type": "string", "format": "uuid" },
-                    "status": { "type": "string", "example": "COMPLETED" },
-                    "playlist": {
-                        "type": "object",
-                        "nullable": true,
-                        "properties": {
-                            "id": { "type": "string", "format": "uuid" },
-                            "title": { "type": "string", "example": "Node.js Mastery" }
-                        }
-                    },
-                    "videoId": { "type": "string", "nullable": true, "example": "dQw4w9WgXcQ" },
-                    "cycles": { "type": "integer", "example": 2 },
-                    "duration": { "type": "integer", "example": 1500 },
-                    "completedDuration": { "type": "integer", "example": 1500 },
-                    "completionPercentage": { "type": "integer", "example": 100 },
-                    "startTime": { "type": "string", "format": "date-time" },
-                    "endTime": { "type": "string", "format": "date-time", "nullable": true },
-                    "analytics": {
-                        "type": "object",
-                        "properties": {
-                            "totalScoresLogged": { "type": "integer", "example": 15 },
-                            "avgAttentionScore": { "type": "integer", "example": 82 },
-                            "peakAttentionScore": { "type": "integer", "example": 95 },
-                            "lowestAttentionScore": { "type": "integer", "example": 60 },
-                            "focusRating": { "type": "string", "example": "Excellent Focus" },
-                            "timeline": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "timestamp": { "type": "string", "format": "date-time" },
-                                        "score": { "type": "integer", "example": 85 }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "UserStatsResponse": {
-                "type": "object",
-                "properties": {
-                    "totalPlaylists": { "type": "integer", "example": 3 },
-                    "totalSessionsCompleted": { "type": "integer", "example": 12 },
-                    "totalFocusMinutes": { "type": "integer", "example": 300 },
-                    "totalFocusHours": { "type": "number", "example": 5.0 },
-                    "overallAverageAttentionScore": { "type": "integer", "nullable": true, "example": 81 },
-                    "studyStreakDays": { "type": "integer", "example": 4 },
-                    "recentSessions": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": { "type": "string", "format": "uuid" },
-                                "status": { "type": "string", "example": "COMPLETED" },
-                                "duration": { "type": "integer", "example": 1500 },
-                                "completedDuration": { "type": "integer", "example": 1500 },
-                                "startTime": { "type": "string", "format": "date-time" },
-                                "endTime": { "type": "string", "format": "date-time", "nullable": true },
-                                "playlist": {
-                                    "type": "object",
-                                    "nullable": true,
-                                    "properties": {
-                                        "id": { "type": "string", "format": "uuid" },
-                                        "title": { "type": "string", "example": "Python Basics" }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+  "openapi": "3.0.1",
+  "info": {
+    "title": "CogneLearn API",
+    "description": "REST API Documentation for CogneLearn Application",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current Server"
     }
+  ],
+  "paths": {
+    "/api/v1/auth/signup": {
+      "post": {
+        "tags": [
+          "Auth Controller"
+        ],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Auth Controller"
+        ],
+        "summary": "Authenticate user & get JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Auth Controller"
+        ],
+        "summary": "Get currently logged-in user profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Get user profile details",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/stats": {
+      "get": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Get user learning statistics and study streak",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User overall learning statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/playlists": {
+      "get": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Get all playlists for logged-in user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of playlists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaylistResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Create a new playlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Playlist created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/{playlistId}": {
+      "get": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Get a playlist by ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Update a playlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaylistUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Playlist updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Delete a playlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/{playlistId}/videos": {
+      "post": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Add a video to a playlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/{playlistId}/videos/{videoId}": {
+      "delete": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Remove a video from a playlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "videoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Video removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/import-youtube": {
+      "post": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Import a YouTube playlist automatically (Hybrid: API key or zero-config)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/YouTubeImportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Playlist imported successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YouTubeImportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid YouTube URL or ID"
+          },
+          "404": {
+            "description": "Playlist not found or is private"
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/{playlistId}/videos/{videoId}/progress": {
+      "patch": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Update video watch progress and completion status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "videoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "dQw4w9WgXcQ"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoProgressRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video progress updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoProgressResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "Playlist or video not found"
+          }
+        }
+      }
+    },
+    "/api/playlist": {
+      "get": {
+        "tags": [
+          "Playlist Controller"
+        ],
+        "summary": "Get playlist formatted for video player",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "playlistId",
+            "in": "query",
+            "required": false,
+            "description": "Optional playlist ID. Defaults to user's most recent playlist if omitted.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist formatted for player",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistPlayerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/start": {
+      "post": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Start a new study session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An active session already exists"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/active": {
+      "get": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Get current active or paused session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active session or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "get": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Get session history (paginated)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/pause": {
+      "patch": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Pause an active session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionProgressRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session paused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is not active"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/resume": {
+      "patch": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Resume a paused session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session resumed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is not paused"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/complete": {
+      "post": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Complete a session and update playlist focus time",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionProgressRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session completed and focus time updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCompleteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already completed"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/attention": {
+      "post": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Log single or batch attention scores (0-100) for active session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttentionLogRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Attention scores logged successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttentionLogResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid score or session not active"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/report": {
+      "get": {
+        "tags": [
+          "Session Controller"
+        ],
+        "summary": "Get detailed session analytics report with timeline and ratings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed session report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionReportResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health Check"
+        ],
+        "summary": "Check API server health status",
+        "responses": {
+          "200": {
+            "description": "Server is healthy"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SignupRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Abdullah"
+          },
+          "email": {
+            "type": "string",
+            "example": "abdullah@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "abdullah@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "PlaylistRequest": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "JavaScript Mastery"
+          },
+          "description": {
+            "type": "string",
+            "example": "Full JS course playlist"
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoItemRequest"
+            }
+          }
+        }
+      },
+      "VideoItemRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "dQw4w9WgXcQ"
+          },
+          "title": {
+            "type": "string",
+            "example": "Video Title"
+          },
+          "kind": {
+            "type": "string",
+            "example": "youtube#video"
+          },
+          "subtitle": {
+            "type": "string",
+            "example": "10:30"
+          }
+        }
+      },
+      "PlaylistUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoItemRequest"
+            }
+          }
+        }
+      },
+      "VideoItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "dQw4w9WgXcQ"
+          },
+          "title": {
+            "type": "string",
+            "example": "Video Title"
+          },
+          "kind": {
+            "type": "string",
+            "example": "youtube#video"
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "example": "10:30"
+          },
+          "thumbnail": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+          },
+          "duration": {
+            "type": "string",
+            "nullable": true,
+            "example": "10:30"
+          }
+        }
+      },
+      "PlaylistResponse": {
+        "type": "object",
+        "properties": {
+          "playlistId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "title": {
+            "type": "string",
+            "example": "JavaScript Mastery"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Full JS course playlist"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalFocusMinutes": {
+            "type": "integer",
+            "example": 0
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoItemResponse"
+            }
+          }
+        }
+      },
+      "PlayerVideoItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "dQw4w9WgXcQ"
+          },
+          "title": {
+            "type": "string",
+            "example": "Video Title"
+          },
+          "youtubeId": {
+            "type": "string",
+            "example": "dQw4w9WgXcQ"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+          },
+          "duration": {
+            "type": "string",
+            "nullable": true,
+            "example": "10:30"
+          }
+        }
+      },
+      "PlaylistPlayerResponse": {
+        "type": "object",
+        "properties": {
+          "playlistId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "playlistTitle": {
+            "type": "string",
+            "example": "JavaScript Mastery"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Full JS course playlist"
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlayerVideoItemResponse"
+            }
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Playlist deleted successfully."
+          }
+        }
+      },
+      "SessionStartRequest": {
+        "type": "object",
+        "required": [
+          "duration"
+        ],
+        "properties": {
+          "duration": {
+            "type": "integer",
+            "description": "Target session duration in seconds",
+            "example": 1500
+          },
+          "cycles": {
+            "type": "integer",
+            "description": "Number of Pomodoro cycles",
+            "example": 4
+          },
+          "playlistId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Optional playlist to link this session to",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "videoId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional current YouTube video ID",
+            "example": "dQw4w9WgXcQ"
+          }
+        }
+      },
+      "SessionProgressRequest": {
+        "type": "object",
+        "properties": {
+          "completedDuration": {
+            "type": "integer",
+            "description": "How many seconds were actually completed so far",
+            "example": 900
+          }
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED",
+              "COMPLETED"
+            ],
+            "example": "ACTIVE"
+          },
+          "duration": {
+            "type": "integer",
+            "example": 1500
+          },
+          "completedDuration": {
+            "type": "integer",
+            "example": 0
+          },
+          "cycles": {
+            "type": "integer",
+            "example": 4
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "videoId": {
+            "type": "string",
+            "nullable": true
+          },
+          "playlist": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "example": "JavaScript Mastery"
+              }
+            }
+          }
+        }
+      },
+      "SessionCompleteResponse": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "example": "COMPLETED"
+          },
+          "duration": {
+            "type": "integer",
+            "example": 1500
+          },
+          "completedDuration": {
+            "type": "integer",
+            "example": 1500
+          },
+          "cycles": {
+            "type": "integer",
+            "example": 4
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "playlistId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Session completed successfully."
+          }
+        }
+      },
+      "SessionHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "example": 10
+          },
+          "total": {
+            "type": "integer",
+            "example": 25
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 3
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "endTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "avgAttentionScore": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 78
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "AttentionLogRequest": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 85,
+            "description": "Single attention score between 0 and 100"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "example": [
+              75,
+              80,
+              85,
+              90
+            ],
+            "description": "Batch of attention scores (max 100)"
+          }
+        }
+      },
+      "AttentionLogResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Attention scores logged successfully."
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "loggedCount": {
+            "type": "integer",
+            "example": 4
+          },
+          "latestScore": {
+            "type": "integer",
+            "example": 90
+          }
+        }
+      },
+      "SessionReportResponse": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "example": "COMPLETED"
+          },
+          "playlist": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "example": "Node.js Mastery"
+              }
+            }
+          },
+          "videoId": {
+            "type": "string",
+            "nullable": true,
+            "example": "dQw4w9WgXcQ"
+          },
+          "cycles": {
+            "type": "integer",
+            "example": 2
+          },
+          "duration": {
+            "type": "integer",
+            "example": 1500
+          },
+          "completedDuration": {
+            "type": "integer",
+            "example": 1500
+          },
+          "completionPercentage": {
+            "type": "integer",
+            "example": 100
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "analytics": {
+            "type": "object",
+            "properties": {
+              "totalScoresLogged": {
+                "type": "integer",
+                "example": 15
+              },
+              "avgAttentionScore": {
+                "type": "integer",
+                "example": 82
+              },
+              "peakAttentionScore": {
+                "type": "integer",
+                "example": 95
+              },
+              "lowestAttentionScore": {
+                "type": "integer",
+                "example": 60
+              },
+              "focusRating": {
+                "type": "string",
+                "example": "Excellent Focus"
+              },
+              "timeline": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "score": {
+                      "type": "integer",
+                      "example": 85
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "UserStatsResponse": {
+        "type": "object",
+        "properties": {
+          "totalPlaylists": {
+            "type": "integer",
+            "example": 3
+          },
+          "totalSessionsCompleted": {
+            "type": "integer",
+            "example": 12
+          },
+          "totalFocusMinutes": {
+            "type": "integer",
+            "example": 300
+          },
+          "totalFocusHours": {
+            "type": "number",
+            "example": 5.0
+          },
+          "overallAverageAttentionScore": {
+            "type": "integer",
+            "nullable": true,
+            "example": 81
+          },
+          "studyStreakDays": {
+            "type": "integer",
+            "example": 4
+          },
+          "recentSessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "status": {
+                  "type": "string",
+                  "example": "COMPLETED"
+                },
+                "duration": {
+                  "type": "integer",
+                  "example": 1500
+                },
+                "completedDuration": {
+                  "type": "integer",
+                  "example": 1500
+                },
+                "startTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "playlist": {
+                  "type": "object",
+                  "nullable": true,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Python Basics"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "YouTubeImportRequest": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://www.youtube.com/playlist?list=PL1234abcd"
+          },
+          "customTitle": {
+            "type": "string",
+            "nullable": true,
+            "example": "My JS Learning Playlist"
+          }
+        }
+      },
+      "YouTubeImportResponse": {
+        "type": "object",
+        "properties": {
+          "playlistId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "example": "JavaScript Full Course"
+          },
+          "source": {
+            "type": "string",
+            "example": "youtube-sr"
+          },
+          "totalVideos": {
+            "type": "integer",
+            "example": 42
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VideoProgressRequest": {
+        "type": "object",
+        "properties": {
+          "watchedSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 630
+          },
+          "isCompleted": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "VideoProgressResponse": {
+        "type": "object",
+        "properties": {
+          "videoId": {
+            "type": "string",
+            "example": "dQw4w9WgXcQ"
+          },
+          "playlistId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "example": "Intro to JavaScript"
+          },
+          "watchedSeconds": {
+            "type": "integer",
+            "example": 630
+          },
+          "isCompleted": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      }
+    }
+  }
 }
