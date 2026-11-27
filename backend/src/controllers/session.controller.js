@@ -38,10 +38,20 @@ exports.startSession = async (req, res, next) => {
             return res.status(400).json({ error: 'videoId must be a string.' });
         }
 
-        // ইতোমধ্যে ACTIVE সেশন আছে কি না চেক
-        const existing = await prisma.session.findFirst({
-            where: { userId: req.user.id, status: 'ACTIVE' },
-        });
+        // ইতোমধ্যে ACTIVE সেশন আছে কি না ও প্লেলিস্ট মালিকানা প্যারালালে চেক
+        const [existing, playlist] = await Promise.all([
+            prisma.session.findFirst({
+                where: { userId: req.user.id, status: 'ACTIVE' },
+                select: { id: true },
+            }),
+            playlistId
+                ? prisma.playlist.findFirst({
+                    where: { id: playlistId, userId: req.user.id },
+                    select: { id: true },
+                })
+                : null,
+        ]);
+
         if (existing) {
             return res.status(409).json({
                 error: 'You already have an active session. Pause or complete it first.',
@@ -49,14 +59,8 @@ exports.startSession = async (req, res, next) => {
             });
         }
 
-        // প্লেলিস্ট ইউজারের কি না যাচাই (optional)
-        if (playlistId) {
-            const playlist = await prisma.playlist.findFirst({
-                where: { id: playlistId, userId: req.user.id },
-            });
-            if (!playlist) {
-                return res.status(404).json({ error: 'Playlist not found.' });
-            }
+        if (playlistId && !playlist) {
+            return res.status(404).json({ error: 'Playlist not found.' });
         }
 
         const session = await prisma.session.create({
@@ -131,9 +135,16 @@ exports.resumeSession = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const session = await prisma.session.findFirst({
-            where: { id, userId: req.user.id },
+        // টার্গেট সেশন ও অন্য কোনো ACTIVE সেশন আছে কি না একসাথে চেক
+        const relatedSessions = await prisma.session.findMany({
+            where: {
+                userId: req.user.id,
+                OR: [{ id }, { status: 'ACTIVE' }],
+            },
+            select: { id: true, status: true },
         });
+
+        const session = relatedSessions.find((s) => s.id === id);
         if (!session) {
             return res.status(404).json({ error: 'Session not found.' });
         }
@@ -141,10 +152,7 @@ exports.resumeSession = async (req, res, next) => {
             return res.status(400).json({ error: `Cannot resume a session with status: ${session.status}` });
         }
 
-        // অন্য কোনো ACTIVE সেশন নেই তো?
-        const activeSession = await prisma.session.findFirst({
-            where: { userId: req.user.id, status: 'ACTIVE' },
-        });
+        const activeSession = relatedSessions.find((s) => s.status === 'ACTIVE');
         if (activeSession) {
             return res.status(409).json({
                 error: 'Another session is already active.',
@@ -192,23 +200,24 @@ exports.completeSession = async (req, res, next) => {
             finalDuration = result.value;
         }
 
-        const updated = await prisma.session.update({
-            where: { id },
-            data: {
-                status: 'COMPLETED',
-                endTime: new Date(),
-                completedDuration: finalDuration,
-            },
-        });
-
-        // প্লেলিস্টের totalFocusMinutes আপডেট (সেকেন্ড → মিনিট রূপান্তর)
-        if (session.playlistId && finalDuration > 0) {
-            const focusMinutesEarned = Math.floor(finalDuration / 60);
-            await prisma.playlist.update({
-                where: { id: session.playlistId },
-                data: { totalFocusMinutes: { increment: focusMinutesEarned } },
-            });
-        }
+        // Session ও Playlist আপডেট প্যারালালে রান করা
+        const focusMinutesEarned = session.playlistId ? Math.floor(finalDuration / 60) : 0;
+        const [updated] = await Promise.all([
+            prisma.session.update({
+                where: { id },
+                data: {
+                    status: 'COMPLETED',
+                    endTime: new Date(),
+                    completedDuration: finalDuration,
+                },
+            }),
+            focusMinutesEarned > 0
+                ? prisma.playlist.update({
+                    where: { id: session.playlistId },
+                    data: { totalFocusMinutes: { increment: focusMinutesEarned } },
+                })
+                : null,
+        ]);
 
         return res.status(200).json({
             sessionId: updated.id,
