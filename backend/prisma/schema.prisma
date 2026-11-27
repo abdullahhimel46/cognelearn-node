@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // ১. ইউজার মডেল (Auth & Profile)
@@ -36,22 +37,26 @@ model Playlist {
   videos            Video[]
   sessions          Session[]
 
+  @@index([userId, createdAt])
   @@map("playlists")
 }
 
 // ৩. ভিডিও মডেল (Playlist Items)
 model Video {
-  id         String   // Video/YouTube ID
-  title      String
-  kind       String?  @default("youtube#video")
-  subtitle   String?
-  thumbnail  String?
-  duration   String?
+  id             String   // Video/YouTube ID
+  title          String
+  kind           String?  @default("youtube#video")
+  subtitle       String?
+  thumbnail      String?
+  duration       String?
+  isCompleted    Boolean  @default(false) @map("is_completed")
+  watchedSeconds Int      @default(0) @map("watched_seconds")
 
   playlistId String   @map("playlist_id")
   playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 
   @@id([id, playlistId])
+  @@index([playlistId])
   @@map("videos")
 }
 
@@ -76,6 +81,8 @@ model Session {
 
   attentionScores   AttentionScore[]
 
+  @@index([userId, status])
+  @@index([userId, startTime])
   @@map("sessions")
 }
 
@@ -88,5 +95,6 @@ model AttentionScore {
   sessionId String   @map("session_id")
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
+  @@index([sessionId, createdAt])
   @@map("attention_scores")
 }
