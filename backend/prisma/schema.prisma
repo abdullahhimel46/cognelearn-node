@@ -10,15 +10,17 @@ datasource db {
 
 // ১. ইউজার মডেল (Auth & Profile)
 model User {
-  id        String     @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
-  email     String     @unique
+  email     String   @unique
   password  String
-  role      String     @default("USER")
-  createdAt DateTime   @default(now()) @map("created_at")
+  role      String   @default("USER")
+  xpPoints  Int      @default(0) @map("xp_points")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  playlists Playlist[]
-  sessions  Session[]
+  playlists    Playlist[]
+  sessions     Session[]
+  achievements Achievement[]
 
   @@map("users")
 }
@@ -97,4 +99,18 @@ model AttentionScore {
 
   @@index([sessionId, createdAt])
   @@map("attention_scores")
+}
+
+// ৬. অ্যাচিভমেন্ট ও ব্যাজ মডেল (Gamification)
+model Achievement {
+  id       String   @id @default(uuid())
+  badgeKey String   @map("badge_key")
+  earnedAt DateTime @default(now()) @map("earned_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeKey])
+  @@index([userId])
+  @@map("achievements")
 }
