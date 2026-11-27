@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/db');
+const { BADGE_CATALOG, BADGE_MAP, calculateStudyStreak } = require('../services/achievement.service');
 
 // 🛡️ Email format validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -80,6 +81,7 @@ exports.signup = async (req, res, next) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                xpPoints: user.xpPoints ?? 0,
                 createdAt: user.createdAt,
             },
             token,
@@ -120,6 +122,7 @@ exports.login = async (req, res, next) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                xpPoints: user.xpPoints ?? 0,
                 createdAt: user.createdAt,
             },
             token,
@@ -139,6 +142,7 @@ exports.getCurrentUser = async (req, res, next) => {
                 name: true,
                 email: true,
                 role: true,
+                xpPoints: true,
                 createdAt: true,
             },
         });
@@ -153,47 +157,16 @@ exports.getCurrentUser = async (req, res, next) => {
     }
 };
 
-// 🛡️ Helper: ক্যালেন্ডার ডে (YYYY-MM-DD) স্টাডি স্ট্রিক ক্যালকুলেশন
-const calculateStudyStreak = (sessionDates) => {
-    if (!sessionDates || sessionDates.length === 0) return 0;
-
-    // ইউনিক তারিখগুলো সেট আকারে নিয়ে সর্ট করা (নতুন থেকে পুরনো)
-    const uniqueDates = [...new Set(sessionDates.map(d => new Date(d).toISOString().split('T')[0]))].sort().reverse();
-    
-    const today = new Date().toISOString().split('T')[0];
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = yesterdayDate.toISOString().split('T')[0];
-
-    // যদি আজ বা গতকাল কোনোটাই সেশনের তারিখে না থাকে, তবে স্ট্রিক ০
-    if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) {
-        return 0;
-    }
-
-    let streak = 0;
-    let expectedDate = new Date(uniqueDates[0]);
-
-    for (const dateStr of uniqueDates) {
-        const currentDate = new Date(dateStr);
-        const diffDays = Math.round((expectedDate - currentDate) / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) {
-            streak++;
-            expectedDate.setDate(expectedDate.getDate() - 1);
-        } else {
-            break;
-        }
-    }
-
-    return streak;
-};
-
 // ৪. Get User Analytics Dashboard Stats (GET /api/v1/users/stats)
 exports.getUserStats = async (req, res, next) => {
     try {
         const userId = req.user.id;
 
-        const [totalPlaylists, completedSessions, scoreAgg, recentSessions] = await Promise.all([
+        const [user, totalPlaylists, completedSessions, scoreAgg, recentSessions, totalBadgesEarned] = await Promise.all([
+            prisma.user.findUnique({
+                where: { id: userId },
+                select: { xpPoints: true },
+            }),
             prisma.playlist.count({
                 where: { userId },
             }),
@@ -220,6 +193,9 @@ exports.getUserStats = async (req, res, next) => {
                     playlist: { select: { id: true, title: true } },
                 },
             }),
+            prisma.achievement.count({
+                where: { userId },
+            }),
         ]);
 
         // টোটাল ফোকাস মিনিট (প্লেলিস্ট বা সেশন হিসেব থেকে)
@@ -244,7 +220,80 @@ exports.getUserStats = async (req, res, next) => {
             totalFocusHours: parseFloat((totalFocusMinutes / 60).toFixed(1)),
             overallAverageAttentionScore: avgAttentionScore,
             studyStreakDays: streakDays,
+            xpPoints: user?.xpPoints ?? 0,
+            totalBadgesEarned,
             recentSessions,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ৫. Get User Earned Achievements (GET /api/v1/users/achievements)
+exports.getUserAchievements = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        const [achievements, user] = await Promise.all([
+            prisma.achievement.findMany({
+                where: { userId },
+                orderBy: { earnedAt: 'desc' },
+                select: { badgeKey: true, earnedAt: true },
+            }),
+            prisma.user.findUnique({
+                where: { id: userId },
+                select: { xpPoints: true },
+            }),
+        ]);
+
+        const formatted = achievements.map((a) => {
+            const meta = BADGE_MAP.get(a.badgeKey) || {
+                badgeKey: a.badgeKey,
+                title: a.badgeKey,
+                description: '',
+                icon: '🏅',
+            };
+            return {
+                badgeKey: a.badgeKey,
+                title: meta.title,
+                description: meta.description,
+                icon: meta.icon,
+                earnedAt: a.earnedAt,
+            };
+        });
+
+        return res.status(200).json({
+            achievements: formatted,
+            totalEarned: formatted.length,
+            xpPoints: user?.xpPoints ?? 0,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ৬. Get Full Achievement Catalog (GET /api/v1/users/achievements/catalog)
+exports.getAchievementCatalog = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        const earned = await prisma.achievement.findMany({
+            where: { userId },
+            select: { badgeKey: true, earnedAt: true },
+        });
+
+        const earnedMap = new Map(earned.map((e) => [e.badgeKey, e.earnedAt]));
+
+        const catalog = BADGE_CATALOG.map((badge) => ({
+            ...badge,
+            earned: earnedMap.has(badge.badgeKey),
+            earnedAt: earnedMap.get(badge.badgeKey) || null,
+        }));
+
+        return res.status(200).json({
+            catalog,
+            totalBadges: catalog.length,
+            totalEarned: earned.length,
         });
     } catch (error) {
         next(error);
