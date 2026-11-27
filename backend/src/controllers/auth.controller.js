@@ -193,18 +193,18 @@ exports.getUserStats = async (req, res, next) => {
     try {
         const userId = req.user.id;
 
-        const [userPlaylists, completedSessions, allScores, recentSessions] = await Promise.all([
-            prisma.playlist.findMany({
+        const [totalPlaylists, completedSessions, scoreAgg, recentSessions] = await Promise.all([
+            prisma.playlist.count({
                 where: { userId },
-                select: { id: true, totalFocusMinutes: true },
             }),
             prisma.session.findMany({
                 where: { userId, status: 'COMPLETED' },
-                select: { id: true, completedDuration: true, startTime: true },
+                select: { completedDuration: true, startTime: true },
             }),
-            prisma.attentionScore.findMany({
+            // Compute average inside PostgreSQL instead of transferring every score row over WAN
+            prisma.attentionScore.aggregate({
                 where: { session: { userId } },
-                select: { score: true },
+                _avg: { score: true },
             }),
             prisma.session.findMany({
                 where: { userId },
@@ -229,8 +229,8 @@ exports.getUserStats = async (req, res, next) => {
         );
 
         // ওভারঅল গড় এটেনশন স্কোর
-        const avgAttentionScore = allScores.length > 0
-            ? Math.round(allScores.reduce((sum, item) => sum + item.score, 0) / allScores.length)
+        const avgAttentionScore = scoreAgg._avg.score !== null
+            ? Math.round(scoreAgg._avg.score)
             : null;
 
         // স্টাডি স্ট্রিক
@@ -238,7 +238,7 @@ exports.getUserStats = async (req, res, next) => {
         const streakDays = calculateStudyStreak(sessionDates);
 
         return res.status(200).json({
-            totalPlaylists: userPlaylists.length,
+            totalPlaylists,
             totalSessionsCompleted: completedSessions.length,
             totalFocusMinutes,
             totalFocusHours: parseFloat((totalFocusMinutes / 60).toFixed(1)),
