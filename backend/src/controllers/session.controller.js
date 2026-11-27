@@ -1,4 +1,5 @@
 const prisma = require('../config/db');
+const achievementService = require('../services/achievement.service');
 
 // 🛡️ Helper: validate and parse integer with bounds
 const parsePositiveInt = (value, fieldName, min = 1, max = Infinity) => {
@@ -200,7 +201,20 @@ exports.completeSession = async (req, res, next) => {
             finalDuration = result.value;
         }
 
-        // Session ও Playlist আপডেট প্যারালালে রান করা
+        // সেশনের গড় এটেনশন স্কোর বের করে XP হিসাব করা
+        const scoreAgg = await prisma.attentionScore.aggregate({
+            where: { sessionId: id },
+            _avg: { score: true },
+        });
+        const avgAttentionScore = scoreAgg._avg.score !== null
+            ? Math.round(scoreAgg._avg.score)
+            : null;
+
+        const baseXP = Math.floor(finalDuration / 60);
+        const attentionBonus = (avgAttentionScore !== null && avgAttentionScore >= 80) ? 0.20 : 0;
+        const xpEarned = Math.floor(baseXP * (1 + attentionBonus));
+
+        // Session, Playlist ও User XP আপডেট প্যারালালে রান করা
         const focusMinutesEarned = session.playlistId ? Math.floor(finalDuration / 60) : 0;
         const [updated] = await Promise.all([
             prisma.session.update({
@@ -217,7 +231,22 @@ exports.completeSession = async (req, res, next) => {
                     data: { totalFocusMinutes: { increment: focusMinutesEarned } },
                 })
                 : null,
+            xpEarned > 0
+                ? prisma.user.update({
+                    where: { id: req.user.id },
+                    data: { xpPoints: { increment: xpEarned } },
+                })
+                : null,
         ]);
+
+        // 🔥 Fire-and-forget ব্যাজ চেক (রেসপন্স ব্লক করবে না)
+        achievementService
+            .checkAndAwardBadges(req.user.id, 'SESSION_COMPLETED', {
+                sessionId: id,
+                completedDuration: finalDuration,
+                avgAttentionScore,
+            })
+            .catch(() => {});
 
         return res.status(200).json({
             sessionId: updated.id,
@@ -228,6 +257,7 @@ exports.completeSession = async (req, res, next) => {
             startTime: updated.startTime,
             endTime: updated.endTime,
             playlistId: updated.playlistId,
+            xpEarned,
             message: 'Session completed successfully.',
         });
     } catch (error) {
