@@ -15,6 +15,12 @@ const playlistController = require('./controllers/playlist.controller');
 
 const app = express();
 
+// Track latest request timestamp for smart Neon keep-alive
+app.use((req, res, next) => {
+    globalThis.__dbLastActivityAt = Date.now();
+    next();
+});
+
 // 🛡️ Security Headers (Helmet)
 app.use(helmet());
 
