@@ -1,5 +1,6 @@
 const prisma = require('../config/db');
 const youtubeService = require('../services/youtube.service');
+const achievementService = require('../services/achievement.service');
 
 // 🛡️ Constants
 const MAX_PLAYLIST_TITLE_LENGTH = 200;
@@ -375,6 +376,13 @@ exports.updateVideoProgress = async (req, res, next) => {
             },
             data: updateData,
         });
+
+        // ভিডিও কমপ্লিট হলে ব্যাজ চেক (fire-and-forget)
+        if (updated.isCompleted === true) {
+            achievementService
+                .checkAndAwardBadges(req.user.id, 'VIDEO_COMPLETED', { playlistId, videoId })
+                .catch(() => {});
+        }
 
         return res.status(200).json({
             videoId: updated.id,
