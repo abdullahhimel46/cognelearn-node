@@ -147,6 +147,56 @@
         }
       }
     },
+    "/api/v1/users/achievements": {
+      "get": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Get user's earned achievements and XP points",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of earned badges and XP points",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/achievements/catalog": {
+      "get": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Get full catalog of all possible badges with earned status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full badge catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/playlists": {
       "get": {
         "tags": [
@@ -990,6 +1040,10 @@
           "role": {
             "type": "string"
           },
+          "xpPoints": {
+            "type": "integer",
+            "example": 120
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -1325,6 +1379,10 @@
             "format": "uuid",
             "nullable": true
           },
+          "xpEarned": {
+            "type": "integer",
+            "example": 30
+          },
           "message": {
             "type": "string",
             "example": "Session completed successfully."
@@ -1551,6 +1609,14 @@
             "type": "integer",
             "example": 4
           },
+          "xpPoints": {
+            "type": "integer",
+            "example": 120
+          },
+          "totalBadgesEarned": {
+            "type": "integer",
+            "example": 3
+          },
           "recentSessions": {
             "type": "array",
             "items": {
@@ -1678,6 +1744,83 @@
           "isCompleted": {
             "type": "boolean",
             "example": true
+          }
+        }
+      },
+      "BadgeItem": {
+        "type": "object",
+        "properties": {
+          "badgeKey": {
+            "type": "string",
+            "example": "FIRST_SESSION"
+          },
+          "title": {
+            "type": "string",
+            "example": "প্রথম পদক্ষেপ"
+          },
+          "description": {
+            "type": "string",
+            "example": "প্রথম সেশন কমপ্লিট করেছেন"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🎯"
+          },
+          "earnedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "AchievementResponse": {
+        "type": "object",
+        "properties": {
+          "achievements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BadgeItem"
+            }
+          },
+          "totalEarned": {
+            "type": "integer",
+            "example": 1
+          },
+          "xpPoints": {
+            "type": "integer",
+            "example": 25
+          }
+        }
+      },
+      "AchievementCatalogResponse": {
+        "type": "object",
+        "properties": {
+          "catalog": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/BadgeItem"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "earned": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "totalBadges": {
+            "type": "integer",
+            "example": 10
+          },
+          "totalEarned": {
+            "type": "integer",
+            "example": 1
           }
         }
       }
